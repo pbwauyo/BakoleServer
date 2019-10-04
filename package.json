@@ -1,0 +1,20 @@
+{
+  "name": "bakole-server",
+  "version": "1.0.0",
+  "description": "server for the Bakole app",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "author": "Peter Wauyo",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "mongoose": "^5.6.13"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.2"
+  }
+}
