@@ -22,6 +22,7 @@ router.get('/:workerId', async (req, res, next) => {
                 console.log(err);
             }
             if(doc){
+                console.log(doc);
                 res.status(200).send(doc);
             }
         });
@@ -35,6 +36,7 @@ router.get('/:workerId', async (req, res, next) => {
 router.post('/:workerId', async (req, res, next)=>{
 
     var _id = req.params.workerId;
+    var employerName = req.body.employerName;
     var employerEmail = req.body.employerEmail;
     var description = req.body.description;
     var category = req.body.category;
@@ -46,6 +48,7 @@ router.post('/:workerId', async (req, res, next)=>{
         
         const job = new Job ({
             _id: _id,
+            employerName: employerName,
             employerEmail: employerEmail,
             description: description,
             category: category,
