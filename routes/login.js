@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
 const SignUp = require('../models/workerDetails');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');

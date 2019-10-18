@@ -8,7 +8,8 @@ const jobDescription = mongoose.Schema({
     category: String,
     fee: String,
     place: String,
-    time: String
+    time: String,
+    date: String
 });
 
 module.exports = mongoose.model('JobDescription', jobDescription);

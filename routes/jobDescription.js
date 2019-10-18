@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
@@ -43,6 +44,7 @@ router.post('/:workerId', async (req, res, next)=>{
     var fee = req.body.fee;
     var place = req.body.location;
     var time = req.body.startTime;
+    var date = req.body.startDate;
 
     if(employerEmail.trim()!="" && description.trim()!="" && category.trim()!="" && fee.trim()!="" && place.trim()!="" && time.trim()!=""){
         
@@ -54,10 +56,9 @@ router.post('/:workerId', async (req, res, next)=>{
             category: category,
             fee: fee,
             place: place,
-            time: time
+            time: time,
+            date: date
         });
-
-        
 
         try{
             
@@ -67,9 +68,7 @@ router.post('/:workerId', async (req, res, next)=>{
         }catch(err){
             console.error(err.message);
             res.status(500).json({msg: "error while saving"});
-        }    
-        
-        
+        }       
     }
 });
 
