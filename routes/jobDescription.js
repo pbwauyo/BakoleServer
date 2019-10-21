@@ -42,35 +42,35 @@ router.post('/:workerId', async (req, res, next)=>{
     var description = req.body.description;
     var category = req.body.category;
     var fee = req.body.fee;
-    var place = req.body.location;
-    var time = req.body.startTime;
-    var date = req.body.startDate;
+    var place = req.body.place;
+    var time = req.body.time;
+    var date = req.body.date;
+    
+    const job = new Job ({
+        _id: _id,
+        employerName: employerName,
+        employerEmail: employerEmail,
+        description: description,
+        category: category,
+        fee: fee,
+        place: place,
+        time: time,
+        date: date
+    });
 
-    if(employerEmail.trim()!="" && description.trim()!="" && category.trim()!="" && fee.trim()!="" && place.trim()!="" && time.trim()!=""){
+    console.log(job);
+
+    try{
         
-        const job = new Job ({
-            _id: _id,
-            employerName: employerName,
-            employerEmail: employerEmail,
-            description: description,
-            category: category,
-            fee: fee,
-            place: place,
-            time: time,
-            date: date
-        });
+        await job.save()
+        res.status(200).json({msg: "job details saved successfully"});
 
-        try{
-            
-            await job.save()
-            res.status(200).json({msg: "job details saved successfully"});
-
-        }catch(err){
-            console.error(err.message);
-            res.status(500).json({msg: "error while saving"});
-        }       
-    }
-});
+    }catch(err){
+        console.error(err.message);
+        res.status(500).json({msg: "error while saving"});
+    }       
+  }
+);
 
 router.delete('/', (req, res, next)=>{
 
