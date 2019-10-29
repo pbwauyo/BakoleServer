@@ -5,6 +5,14 @@ const router = express.Router();
 const bodyParser = require('body-parser');
 const url = require('../constants');
 const Job = require('../models/jobDescription');
+const firebaseAdmin = require('firebase-admin');
+const serviceAccount = "C:\\Users\\Hp\\Desktop\\Bakole-5a66b3415ac9.json";
+
+firebaseAdmin.initializeApp({
+    credential: firebaseAdmin.credential.cert(serviceAccount),
+});
+
+const firebaseDb= firebaseAdmin.firestore();
 
 mongoose.connect(url, {useNewUrlParser:true}, (err)=>{
     if(err) console.log(err);
@@ -63,6 +71,13 @@ router.post('/:workerId', async (req, res, next)=>{
     try{
         
         await job.save()
+        let worker = {
+            wEmail: employerEmail,
+            wDeviceId: "332jnh8923k023n32"
+        }
+
+        await firebaseDb.collection("workers").doc(_id).set(worker);
+
         res.status(200).json({msg: "job details saved successfully"});
 
     }catch(err){
