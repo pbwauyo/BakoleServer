@@ -47,6 +47,7 @@ router.post('/:workerId', async (req, res, next)=>{
     var _id = req.params.workerId;
     var employerName = req.body.employerName;
     var employerEmail = req.body.employerEmail;
+    var employerDeviceToken = req.body.employerDeviceToken;
     var description = req.body.description;
     var category = req.body.category;
     var fee = req.body.fee;
@@ -58,12 +59,13 @@ router.post('/:workerId', async (req, res, next)=>{
         _id: _id,
         employerName: employerName,
         employerEmail: employerEmail,
+        employerDeviceToken: employerDeviceToken,
         description: description,
         category: category,
         fee: fee,
         place: place,
         time: time,
-        date: date
+        date: date, 
     });
 
     console.log(job);
@@ -73,7 +75,7 @@ router.post('/:workerId', async (req, res, next)=>{
         await job.save()
         let worker = {
             wEmail: employerEmail,
-            wDeviceId: "332jnh8923k023n32"
+            wDeviceId: employerDeviceToken
         }
 
         await firebaseDb.collection("workers").doc(_id).set(worker);
