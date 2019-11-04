@@ -7,7 +7,7 @@ const url = require('../constants');
 const Job = require('../models/jobDescription');
 const Worker = require("../models/workerDetails");
 const firebaseAdmin = require('firebase-admin');
-const serviceAccount = "../key/bakole-a06db-firebase-adminsdk-wajyh-c38b702a13.json";
+const serviceAccount = "/home/pbwauyo/service account/bakole-a06db-firebase-adminsdk-wajyh-c38b702a13.json";
 
 firebaseAdmin.initializeApp({
     credential: firebaseAdmin.credential.cert(serviceAccount),
@@ -15,7 +15,7 @@ firebaseAdmin.initializeApp({
 
 const firebaseDb= firebaseAdmin.firestore();
 
-mongoose.connect(url, {useNewUrlParser:true}, (err)=>{
+mongoose.connect(url, {useNewUrlParser:true, useUnifiedTopology: true}, (err)=>{
     if(err) console.log(err);
     else console.log("connection to cld db successful");
 })
@@ -90,9 +90,7 @@ router.post('/:workerId', async (req, res, next)=>{
                 await firebaseDb.collection("workers").doc(_id).set(worker);
 
             }
-        })
-
-        
+        }) 
 
         res.status(200).json({msg: "job details saved successfully"});
 

@@ -34,7 +34,6 @@ router.get('', async(req, res, next)=>{
 router.get('/:email/:password', async (req, res, next) => {
     const email = req.params.email;
     const password = req.params.password;
-    var test = "initial";
     console.log(email);
     console.log(password);
 
@@ -46,13 +45,9 @@ router.get('/:email/:password', async (req, res, next) => {
             }
             
             if(JSON.stringify(docs).length>2){
-                console.log("greater than 0");
-                console.log(JSON.stringify(docs).length);
-                console.log(docs);
-                test = "user found in workers";
                 res.set('user-type', 'worker');
-                res.status(200).send(docs);
                 req.session.userEmail = docs[0]["email"];
+                res.status(200).send(docs);
             }
             else{
                 console.log("not found in worker");
@@ -64,10 +59,9 @@ router.get('/:email/:password', async (req, res, next) => {
                     }
                     console.log(doc);
                     if(JSON.stringify(doc).length > 2){
-                        test = "user found in employers";
                         res.set('user-type', 'employer');
+                        req.session.userEmail = doc[0]["email"];     
                         res.status(200).send(doc);    
-                        req.session.userEmail = docs[0]["email"];     
                     }
                     else{
                         res.status(404).json({message: "no user found"});
