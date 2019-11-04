@@ -6,6 +6,7 @@ const User = require('../models/users');
 const bodyParser = require('body-parser');
 const Worker = require('../models/workerDetails');
 const Employer = require('../models/employer');
+const session  = require('express-session');
 
 const cloudDbUrl = 'mongodb+srv://pbwauyo:platinum87@cluster0-5gns4.mongodb.net/test?retryWrites=true&w=majority';
 
@@ -17,6 +18,18 @@ mongoose.connect(cloudDbUrl, {useNewUrlParser: true}, (err)=>{
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));
+router.use(session({secret: "mkjnk", saveUninitialized: false, resave: false}))
+
+router.get('', async(req, res, next)=>{
+    if(req.session){
+        console.log("Logged in user id: " + req.session.userEmail);
+        res.status("200").json({"message": req.session.userEmail});
+    }
+    else{
+        console.log("No logged user");
+        res.status("404").json({"message": "no logged in user"});
+    }
+});
 
 router.get('/:email/:password', async (req, res, next) => {
     const email = req.params.email;
@@ -38,7 +51,8 @@ router.get('/:email/:password', async (req, res, next) => {
                 console.log(docs);
                 test = "user found in workers";
                 res.set('user-type', 'worker');
-                res.status(200).send(docs);           
+                res.status(200).send(docs);
+                req.session.userEmail = docs[0]["email"];
             }
             else{
                 console.log("not found in worker");
@@ -53,7 +67,7 @@ router.get('/:email/:password', async (req, res, next) => {
                         test = "user found in employers";
                         res.set('user-type', 'employer');
                         res.status(200).send(doc);    
-                             
+                        req.session.userEmail = docs[0]["email"];     
                     }
                     else{
                         res.status(404).json({message: "no user found"});
@@ -63,16 +77,10 @@ router.get('/:email/:password', async (req, res, next) => {
             }
         });
         
-
-        //console.log(test);
     }catch(err){
         console.log(err);
         throw(err);
-    }finally{
-        //console.log(test);
     }
-    //console.log(test);
-    
     
 });
 
@@ -98,24 +106,6 @@ router.post('/', (req, res, next)=>{
 
     res.status(200).json({message: ""});    
 
-    // res.status(201).json({
-    //     message: "handling request",
-    //     user: user
-    // })
 })
-
-// router.get('/', (req, res, next)=>{
-//     User.find().exec().then((doc)=>{
-//         console.log(doc);
-//         res.status(200).json(doc);
-//     })
-// }
-// )
-
-router.get('/', (req, res, next)=>{
-    res.status(200).json({message: "connection ok"});
-    console.log("connection has been made at Users");
-}
-);
 
 module.exports = router

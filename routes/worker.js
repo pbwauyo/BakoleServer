@@ -66,7 +66,8 @@ router.post('/', async(req, res, next)=>{
         averagePay: req.body.averagePay,
         location: req.body.location,
         skillStatus: req.body.skillStatus,
-        rating: req.body.rating
+        rating: req.body.rating,
+        deviceToken: req.body.deviceToken
     });
 
     console.log("executing worker post request");

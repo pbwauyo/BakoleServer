@@ -9,7 +9,8 @@ const employer = mongoose.Schema({
     email: String,
     password: String,
     location: String,
-    rating: String
+    rating: String,
+    deviceToken: String
     
 });
 

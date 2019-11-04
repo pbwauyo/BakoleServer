@@ -5,6 +5,14 @@ const router = express.Router();
 const bodyParser = require('body-parser');
 const url = require('../constants');
 const Job = require('../models/jobDescription');
+const firebaseAdmin = require('firebase-admin');
+const serviceAccount = "C:\\Users\\Hp\\Desktop\\Bakole-5a66b3415ac9.json";
+
+firebaseAdmin.initializeApp({
+    credential: firebaseAdmin.credential.cert(serviceAccount),
+});
+
+const firebaseDb= firebaseAdmin.firestore();
 
 mongoose.connect(url, {useNewUrlParser:true}, (err)=>{
     if(err) console.log(err);
@@ -39,6 +47,7 @@ router.post('/:workerId', async (req, res, next)=>{
     var _id = req.params.workerId;
     var employerName = req.body.employerName;
     var employerEmail = req.body.employerEmail;
+    var employerDeviceToken = req.body.employerDeviceToken;
     var description = req.body.description;
     var category = req.body.category;
     var fee = req.body.fee;
@@ -50,12 +59,13 @@ router.post('/:workerId', async (req, res, next)=>{
         _id: _id,
         employerName: employerName,
         employerEmail: employerEmail,
+        employerDeviceToken: employerDeviceToken,
         description: description,
         category: category,
         fee: fee,
         place: place,
         time: time,
-        date: date
+        date: date, 
     });
 
     console.log(job);
@@ -63,6 +73,13 @@ router.post('/:workerId', async (req, res, next)=>{
     try{
         
         await job.save()
+        let worker = {
+            wEmail: employerEmail,
+            wDeviceId: employerDeviceToken
+        }
+
+        await firebaseDb.collection("workers").doc(_id).set(worker);
+
         res.status(200).json({msg: "job details saved successfully"});
 
     }catch(err){

@@ -51,7 +51,8 @@ router.post('', async(req, res, next)=>{
         email: req.body.email,
         password: req.body.password,
         location: req.body.location,
-        rating: req.body.rating
+        rating: req.body.rating,
+        deviceToken: req.body.deviceToken
     });
 
     try{

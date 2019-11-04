@@ -13,6 +13,7 @@ const worker = mongoose.Schema({
     location: String,
     skillStatus: String,
     rating: String,
+    deviceToken: String
 })
 
 module.exports = mongoose.model('Worker', worker);
