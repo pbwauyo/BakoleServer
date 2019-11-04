@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const url = require('../constants');
 const Job = require('../models/jobDescription');
 const firebaseAdmin = require('firebase-admin');
-const serviceAccount = "C:\\Users\\Hp\\Desktop\\Bakole-5a66b3415ac9.json";
+const serviceAccount = "../key/bakole-a06db-firebase-adminsdk-wajyh-c38b702a13.json";
 
 firebaseAdmin.initializeApp({
     credential: firebaseAdmin.credential.cert(serviceAccount),
