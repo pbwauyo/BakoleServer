@@ -5,6 +5,7 @@ const router = express.Router();
 const bodyParser = require('body-parser');
 const url = require('../constants');
 const Job = require('../models/jobDescription');
+const Worker = require("../models/workerDetails");
 const firebaseAdmin = require('firebase-admin');
 const serviceAccount = "../key/bakole-a06db-firebase-adminsdk-wajyh-c38b702a13.json";
 
@@ -73,12 +74,25 @@ router.post('/:workerId', async (req, res, next)=>{
     try{
         
         await job.save()
-        let worker = {
-            wEmail: employerEmail,
-            wDeviceId: employerDeviceToken
-        }
 
-        await firebaseDb.collection("workers").doc(_id).set(worker);
+        await Worker.find({_id: _id}).lean().exec(async (err, doc)=>{
+            if(err){
+                console.log("error in posting job to worker: ", _id);
+            }
+            if(doc){
+                console.log("document: ", doc);
+
+                let worker = {
+                    wEmail: doc[0]["email"],
+                    wDeviceId: doc[0]["deviceToken"]
+                }
+        
+                await firebaseDb.collection("workers").doc(_id).set(worker);
+
+            }
+        })
+
+        
 
         res.status(200).json({msg: "job details saved successfully"});
 
