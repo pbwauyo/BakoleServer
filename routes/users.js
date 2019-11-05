@@ -20,24 +20,61 @@ router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));
 router.use(session({secret: "mkjnk", saveUninitialized: false, resave: false}))
 
-router.get('', async(req, res, next)=>{
-    if(req.session){
-        console.log("Logged in user id: " + req.session.userEmail);
-        res.status("200").json({"message": req.session.userEmail});
+router.get('', (req, res, next)=>{
+    // req.session.destroy((err)=>{
+    //     if(err){
+    //         console.log(err);
+    //         res.status(400).json({"error" : "failed to clear session"})
+    //     }
+    //     else{
+    //         res.status(200).json({"message": "session cleared succesfully"})
+    //     }
+    // })
+
+    res.status(200).json({"message" : "Connection successful"});
+})
+
+router.get('/:phoneId', async(req, res, next)=>{
+    const phoneId = req.params.phoneId;
+
+    if(req.session.loggedInUsers){
+        const loggedInUsers = req.session.loggedInUsers;
+        var exists = false;
+        var user;
+        console.log("Logged in users: ", loggedInUsers);
+
+        for(loggedInUser of loggedInUsers){
+            if(loggedInUser.phoneId == phoneId){
+                user = loggedInUser.user;
+                console.log("user exists: ", user);
+                exists = true;
+            }
+        }
+        console.log(exists);
+
+        if(exists){
+            res.status(200).send(user);
+        }else{
+            res.status(404).json({"message": "no matching record for user"});
+        }
+        
     }
     else{
-        console.log("No logged user");
-        res.status("404").json({"message": "no logged in user"});
+        console.log("No logged in user");
+        res.status(404).json({"message": "no logged in user"});
     }
 });
 
-router.get('/:email/:password', async (req, res, next) => {
+router.get('/:phoneId/:email/:password', async (req, res, next) => {
     const email = req.params.email;
     const password = req.params.password;
+    const phoneId = req.params.phoneId;
+
     console.log(email);
     console.log(password);
 
     try{
+        
         await Worker.find({email:email, password:password}, '-__v').lean().exec(async (err,docs)=>{
             if(err){
                 console.log(err.message);
@@ -46,7 +83,21 @@ router.get('/:email/:password', async (req, res, next) => {
             
             if(JSON.stringify(docs).length>2){
                 res.set('user-type', 'worker');
-                req.session.userEmail = docs[0]["email"];
+
+                if(!req.session.loggedInUsers){
+                    req.session.loggedInUsers = [];
+                    req.session.loggedInUsers.push({
+                        phoneId: phoneId,
+                        user: docs
+                    });
+                }
+                else{
+                    req.session.loggedInUsers.push({
+                        phoneId: phoneId,
+                        user: docs
+                    });
+                }
+
                 res.status(200).send(docs);
             }
             else{
@@ -60,7 +111,19 @@ router.get('/:email/:password', async (req, res, next) => {
                     console.log(doc);
                     if(JSON.stringify(doc).length > 2){
                         res.set('user-type', 'employer');
-                        req.session.userEmail = doc[0]["email"];     
+                        if(!req.session.loggedInUsers){
+                            req.session.loggedInUsers = [];
+                            req.session.loggedInUsers.push({
+                                phoneId: phoneId,
+                                user: doc
+                            });
+                        }
+                        else{
+                            req.session.loggedInUsers.push({
+                                phoneId: phoneId,
+                                user: doc
+                            });
+                        }
                         res.status(200).send(doc);    
                     }
                     else{
@@ -73,7 +136,6 @@ router.get('/:email/:password', async (req, res, next) => {
         
     }catch(err){
         console.log(err);
-        throw(err);
     }
     
 });
