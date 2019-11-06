@@ -7,8 +7,11 @@ const bodyParser = require('body-parser');
 const Worker = require('../models/workerDetails');
 const Employer = require('../models/employer');
 const session  = require('express-session');
+const MemoryStore = require('memorystore')(session)
 
 const cloudDbUrl = 'mongodb+srv://pbwauyo:platinum87@cluster0-5gns4.mongodb.net/test?retryWrites=true&w=majority';
+const WORKER = "worker";
+const EMPLOYER = "employer";
 
 mongoose.connect(cloudDbUrl, {useNewUrlParser: true}, (err)=>{
     if(err) console.log(err.message);
@@ -18,7 +21,15 @@ mongoose.connect(cloudDbUrl, {useNewUrlParser: true}, (err)=>{
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));
-router.use(session({secret: "mkjnk", saveUninitialized: false, resave: false}))
+router.use(session({secret: "mkjnk", saveUninitialized: true, resave: true, 
+    store: new MemoryStore({
+        checkPeriod: 86400000 ,
+    }),
+    expires: new Date(Date.now() + (30 * 86400 * 1000)), 
+    
+})
+)
+
 
 router.get('', (req, res, next)=>{
     // req.session.destroy((err)=>{
@@ -36,24 +47,34 @@ router.get('', (req, res, next)=>{
 
 router.get('/:phoneId', async(req, res, next)=>{
     const phoneId = req.params.phoneId;
+    console.log("connection made in user/id");
 
     if(req.session.loggedInUsers){
         const loggedInUsers = req.session.loggedInUsers;
         var exists = false;
         var user;
+        var userType;
         console.log("Logged in users: ", loggedInUsers);
 
         for(loggedInUser of loggedInUsers){
             if(loggedInUser.phoneId == phoneId){
                 user = loggedInUser.user;
+                userType = loggedInUser.userType;
                 console.log("user exists: ", user);
                 exists = true;
             }
         }
-        console.log(exists);
 
         if(exists){
-            res.status(200).send(user);
+            if(userType == WORKER){
+                res.set("user-type", WORKER);
+                res.status(200).send(user);
+            }
+            else{
+                res.set('user-type', EMPLOYER);
+                res.status(200).send(user);
+            }
+            
         }else{
             res.status(404).json({"message": "no matching record for user"});
         }
@@ -63,6 +84,52 @@ router.get('/:phoneId', async(req, res, next)=>{
         console.log("No logged in user");
         res.status(404).json({"message": "no logged in user"});
     }
+});
+
+//this will handle storing a user's deviceToken everytime they login from the app
+router.patch('/:deviceToken/:email/:userType', async (req, res, next)=>{
+    const deviceToken = req.params.deviceToken;
+    const email = req.params.email;
+    const userType = req.params.userType;
+
+    console.log(deviceToken , email , userType);
+
+    if(userType == WORKER){
+
+        try{
+            await Worker.update({email : email}, {$set: {deviceToken : deviceToken}},{multi: true}, (err, raw)=>{
+                if(err){
+                    res.status(404).json({error: "error occured while saving token"});
+                    throw(err)
+                }
+                else{
+                    res.status(200).json({message: "device token saved successfully"});
+                }
+            });
+        }catch(err){
+            console.log(err);
+        }
+    }
+    else if(userType == EMPLOYER){
+        try{
+            await Employer.update({email : email}, {$set: {deviceToken : deviceToken}}, {multi: true}, (err, raw)=>{
+                if(err){
+                    res.status(400).json({error: "error occured while saving token"});
+                    throw(err)
+                }
+                else{
+                    res.status(200).json({message: "device token saved successfully"});
+                }
+            });
+        }catch(err){
+            console.log(err);
+            res.status(404).json({error: "error occured"});
+        }
+    }
+    else{
+        res.status(404).json({message: "user type in invalid"});
+    }
+
 });
 
 router.get('/:phoneId/:email/:password', async (req, res, next) => {
@@ -86,16 +153,27 @@ router.get('/:phoneId/:email/:password', async (req, res, next) => {
 
                 if(!req.session.loggedInUsers){
                     req.session.loggedInUsers = [];
-                    req.session.loggedInUsers.push({
-                        phoneId: phoneId,
-                        user: docs
-                    });
+
+                    try{
+                        req.session.loggedInUsers.push({
+                            phoneId: phoneId,
+                            user: docs,
+                            userType: WORKER
+                        });
+                    }catch(err){
+                        console.log(err);
+                    }
                 }
                 else{
-                    req.session.loggedInUsers.push({
-                        phoneId: phoneId,
-                        user: docs
-                    });
+                    try{
+                        req.session.loggedInUsers.push({
+                            phoneId: phoneId,
+                            user: docs,
+                            userType: WORKER
+                        });
+                    }catch(err){
+                        console.log(err);
+                    }
                 }
 
                 res.status(200).send(docs);
@@ -115,13 +193,15 @@ router.get('/:phoneId/:email/:password', async (req, res, next) => {
                             req.session.loggedInUsers = [];
                             req.session.loggedInUsers.push({
                                 phoneId: phoneId,
-                                user: doc
+                                user: doc,
+                                userType: EMPLOYER
                             });
                         }
                         else{
                             req.session.loggedInUsers.push({
                                 phoneId: phoneId,
-                                user: doc
+                                user: doc,
+                                userType: EMPLOYER
                             });
                         }
                         res.status(200).send(doc);    
