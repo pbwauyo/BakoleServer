@@ -8,6 +8,7 @@ const Worker = require('../models/workerDetails');
 const Employer = require('../models/employer');
 const session  = require('express-session');
 const MemoryStore = require('memorystore')(session)
+const LoggedInUser = require('../models/loggedInUser');
 
 const cloudDbUrl = 'mongodb+srv://pbwauyo:platinum87@cluster0-5gns4.mongodb.net/test?retryWrites=true&w=majority';
 const WORKER = "worker";
@@ -45,48 +46,85 @@ router.get('', (req, res, next)=>{
     res.status(200).json({"message" : "Connection successful"});
 })
 
+/* this route is for checking whether a particular email is logged in via the phone which 
+matches the phoneId param */
 router.get('/:phoneId', async(req, res, next)=>{
     const phoneId = req.params.phoneId;
     console.log("connection made in user/id");
 
-    if(req.session.loggedInUsers){
-        const loggedInUsers = req.session.loggedInUsers;
-        var exists = false;
-        var user;
-        var userType;
-        console.log("Logged in users: ", loggedInUsers);
-
-        for(loggedInUser of loggedInUsers){
-            if(loggedInUser.phoneId == phoneId){
-                user = loggedInUser.user;
-                userType = loggedInUser.userType;
-                console.log("user exists: ", user);
-                exists = true;
+    try {
+        await LoggedInUser.find({_id : phoneId}).lean().exec((err, doc) => {
+            if(err){
+                console.log("error", err);
+                //res.status(404).json({"error": "error has occured. check log"});
+                throw(error);     
             }
-        }
-
-        if(exists){
-            if(userType == WORKER){
-                res.set("user-type", WORKER);
-                res.status(200).send(user);
+            else if(doc){
+                console.log("document", doc);
+                console.log(doc[0]["userType"] ,"\n"  ,doc[0]["user"])
+                console.log("userType == Employer","\n" ,doc[0]["userType" == EMPLOYER]);
+                if(doc[0]["userType"] == WORKER){
+                    res.set("user-type", WORKER);
+                    console.log(doc[0]["userType"] , doc[0]["user"])
+                    res.status(200).send(doc[0]["user"]);
+                }
+                else if(doc[0]["userType"] == EMPLOYER){
+                    res.set('user-type', EMPLOYER);
+                    console.log(doc[0]["userType"] , doc[0]["user"])
+                    res.status(200).send(doc[0]["user"]);
+                }
+                else{
+                    res.status(404).json({error: "invalid user type"});
+                }
             }
             else{
-                res.set('user-type', EMPLOYER);
-                res.status(200).send(user);
+
             }
+        });
+    } catch (error) {
+        res.status(404).json({"error": "error has occured. check log"});
+    }
+    
+
+    // if(req.session.loggedInUsers){
+    //     const loggedInUsers = req.session.loggedInUsers;
+    //     var exists = false;
+    //     var user;
+    //     var userType;
+    //     console.log("Logged in users: ", loggedInUsers);
+
+    //     for(loggedInUser of loggedInUsers){
+    //         if(loggedInUser.phoneId == phoneId){
+    //             user = loggedInUser.user;
+    //             userType = loggedInUser.userType;
+    //             console.log("user exists: ", user);
+    //             exists = true;
+    //         }
+    //     }
+
+    //     if(exists){
+    //         if(userType == WORKER){
+    //             res.set("user-type", WORKER);
+    //             res.status(200).send(user);
+    //         }
+    //         else{
+    //             res.set('user-type', EMPLOYER);
+    //             res.status(200).send(user);
+    //         }
             
-        }else{
-            res.status(404).json({"message": "no matching record for user"});
-        }
+    //     }else{
+    //         res.status(404).json({"message": "no matching record for user"});
+    //     }
         
-    }
-    else{
-        console.log("No logged in user");
-        res.status(404).json({"message": "no logged in user"});
-    }
+    // }
+    // else{
+    //     console.log("No logged in user");
+    //     res.status(404).json({"message": "no logged in user"});
+    // }
 });
 
-//this will handle storing a user's deviceToken everytime they login from the app
+/*this will handle storing a user's deviceToken everytime they login from the app
+    The token will be used for firebase push notifications to that particular device*/
 router.patch('/:deviceToken/:email/:userType', async (req, res, next)=>{
     const deviceToken = req.params.deviceToken;
     const email = req.params.email;
@@ -132,6 +170,10 @@ router.patch('/:deviceToken/:email/:userType', async (req, res, next)=>{
 
 });
 
+
+/*The phoneId param will be stored here for later usage when checking whether 
+there's a logged in user attached to it */
+
 router.get('/:phoneId/:email/:password', async (req, res, next) => {
     const email = req.params.email;
     const password = req.params.password;
@@ -151,37 +193,52 @@ router.get('/:phoneId/:email/:password', async (req, res, next) => {
             if(JSON.stringify(docs).length>2){
                 res.set('user-type', 'worker');
 
-                if(!req.session.loggedInUsers){
-                    req.session.loggedInUsers = [];
+                const loggedInUser = new LoggedInUser({
+                    _id : phoneId,
+                    user : docs,
+                    userType : WORKER,
+                });
+                
+                try {
+                    await loggedInUser.save();
+                } catch (error) {
+                    console.log(error);
+                }
+                
 
-                    try{
-                        req.session.loggedInUsers.push({
-                            phoneId: phoneId,
-                            user: docs,
-                            userType: WORKER
-                        });
-                    }catch(err){
-                        console.log(err);
-                    }
-                }
-                else{
-                    try{
-                        req.session.loggedInUsers.push({
-                            phoneId: phoneId,
-                            user: docs,
-                            userType: WORKER
-                        });
-                    }catch(err){
-                        console.log(err);
-                    }
-                }
+                // if(!req.session.loggedInUsers){
+                //     req.session.loggedInUsers = [];
+
+                //     try{
+                //         req.session.loggedInUsers.push({
+                //             phoneId: phoneId,
+                //             user: docs,
+                //             userType: WORKER
+                //         });
+                //     }catch(err){
+                //         console.log(err);
+                //     }
+                // }
+                // else{
+                //     try{
+                //         req.session.loggedInUsers.push({
+                //             phoneId: phoneId,
+                //             user: docs,
+                //             userType: WORKER
+                //         });
+                //     }catch(err){
+                //         console.log(err);
+                //     }
+                // }
+
+
 
                 res.status(200).send(docs);
             }
             else{
                 console.log("not found in worker");
                 console.log(email, password);
-                await Employer.find({email:email, password:password}, '-__v').lean().exec((err, doc)=>{
+                await Employer.find({email:email, password:password}, '-__v').lean().exec(async(err, doc)=>{
                     if(err){
                         console.log(err);
                         throw(err)
@@ -189,21 +246,34 @@ router.get('/:phoneId/:email/:password', async (req, res, next) => {
                     console.log(doc);
                     if(JSON.stringify(doc).length > 2){
                         res.set('user-type', 'employer');
-                        if(!req.session.loggedInUsers){
-                            req.session.loggedInUsers = [];
-                            req.session.loggedInUsers.push({
-                                phoneId: phoneId,
-                                user: doc,
-                                userType: EMPLOYER
-                            });
+                        // if(!req.session.loggedInUsers){
+                        //     req.session.loggedInUsers = [];
+                        //     req.session.loggedInUsers.push({
+                        //         phoneId: phoneId,
+                        //         user: doc,
+                        //         userType: EMPLOYER
+                        //     });
+                        // }
+                        // else{
+                        //     req.session.loggedInUsers.push({
+                        //         phoneId: phoneId,
+                        //         user: doc,
+                        //         userType: EMPLOYER
+                        //     });
+                        // }
+
+                        const loggedInUser = new LoggedInUser({
+                            _id : phoneId,
+                            user : doc,
+                            userType : EMPLOYER,
+                        });
+                        
+                        try {
+                            await loggedInUser.save();
+                        } catch (error) {
+                            console.log(error);
                         }
-                        else{
-                            req.session.loggedInUsers.push({
-                                phoneId: phoneId,
-                                user: doc,
-                                userType: EMPLOYER
-                            });
-                        }
+
                         res.status(200).send(doc);    
                     }
                     else{
