@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const router = express.Router();
 const url = require('../constants');
 const Employer = require('../models/employer');
+const EmployerJob = require('../models/employerJob');
 
 mongoose.connect(url, {useNewUrlParser: true}, (err)=>{
     if(err){
@@ -17,6 +18,63 @@ mongoose.connect(url, {useNewUrlParser: true}, (err)=>{
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));
+
+router.post('/jobs', async (req, res, next)=>{
+    const id = mongoose.Types.ObjectId();
+    const status = req.body.status;
+    const job = {
+        employerName: req.body.job.employerName,
+        employerEmail: req.body.job.employerEmail,
+        description: req.body.job.description,
+        category: req.body.job.category,
+        fee: req.body.job.fee,
+        place: req.body.job.place,
+        time: req.body.job.time,
+        date: req.body.job.date
+    };
+
+    console.log(job);
+
+    const employerJob = EmployerJob({
+        _id : id,
+        status : status,
+        job : job
+    });
+
+    try {
+        await employerJob.save().then((val)=>{
+            console.log(val);
+            res.status(200).json({message : "job saved successfully"});
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({error : "error while saving job"});
+    }
+
+});
+
+router.get('/jobs/:email', async (req, res, next)=>{
+    const email = req.params.email;
+
+    try {
+        await EmployerJob.find({"job.employerEmail" : email}).lean().exec((err, doc)=>{
+            if(err){
+                console.log(err);
+                res.status(404).json({error : "error has occured"});
+            }
+            else if (doc){
+                console.log("found jobs ", doc);
+                res.status(200).send(doc);
+            }
+            else{
+                res.status(500).json({error : "unknown error has occured"});
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({error: "error while retrieving jobs"});
+    }
+});
 
 router.get('/:email/:password', async(req, res, next)=>{
     const email = req.params.email;

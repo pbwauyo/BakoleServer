@@ -46,6 +46,23 @@ router.get('', (req, res, next)=>{
     res.status(200).json({"message" : "Connection successful"});
 })
 
+/*
+    this route is for removing the logged in phone from the database when a user
+    logs out from the app
+*/
+router.delete('/:phoneId', async (req, res, next)=>{
+    const phoneId = req.params.phoneId;
+    await LoggedInUser.deleteMany({_id : phoneId}, (err)=>{
+        if(err){
+            console.log(err);
+            res.status(400).json({error : "error while deleting document"});
+        }
+        else{
+            res.status(200).json({message : "document deleted successfully"});
+        }
+    });
+});
+
 /* this route is for checking whether a particular email is logged in via the phone which 
 matches the phoneId param */
 router.get('/:phoneId', async(req, res, next)=>{
@@ -59,10 +76,8 @@ router.get('/:phoneId', async(req, res, next)=>{
                 //res.status(404).json({"error": "error has occured. check log"});
                 throw(error);     
             }
-            else if(doc){
-                console.log("document", doc);
-                console.log(doc[0]["userType"] ,"\n"  ,doc[0]["user"])
-                console.log("userType == Employer","\n" ,doc[0]["userType" == EMPLOYER]);
+            else if(doc && JSON.stringify(doc).length>2){
+                console.log(doc);
                 if(doc[0]["userType"] == WORKER){
                     res.set("user-type", WORKER);
                     console.log(doc[0]["userType"] , doc[0]["user"])
@@ -78,49 +93,13 @@ router.get('/:phoneId', async(req, res, next)=>{
                 }
             }
             else{
-
+                res.status(404).json({message: "no logged in users"});
             }
         });
     } catch (error) {
         res.status(404).json({"error": "error has occured. check log"});
     }
     
-
-    // if(req.session.loggedInUsers){
-    //     const loggedInUsers = req.session.loggedInUsers;
-    //     var exists = false;
-    //     var user;
-    //     var userType;
-    //     console.log("Logged in users: ", loggedInUsers);
-
-    //     for(loggedInUser of loggedInUsers){
-    //         if(loggedInUser.phoneId == phoneId){
-    //             user = loggedInUser.user;
-    //             userType = loggedInUser.userType;
-    //             console.log("user exists: ", user);
-    //             exists = true;
-    //         }
-    //     }
-
-    //     if(exists){
-    //         if(userType == WORKER){
-    //             res.set("user-type", WORKER);
-    //             res.status(200).send(user);
-    //         }
-    //         else{
-    //             res.set('user-type', EMPLOYER);
-    //             res.status(200).send(user);
-    //         }
-            
-    //     }else{
-    //         res.status(404).json({"message": "no matching record for user"});
-    //     }
-        
-    // }
-    // else{
-    //     console.log("No logged in user");
-    //     res.status(404).json({"message": "no logged in user"});
-    // }
 });
 
 /*this will handle storing a user's deviceToken everytime they login from the app
@@ -205,34 +184,6 @@ router.get('/:phoneId/:email/:password', async (req, res, next) => {
                     console.log(error);
                 }
                 
-
-                // if(!req.session.loggedInUsers){
-                //     req.session.loggedInUsers = [];
-
-                //     try{
-                //         req.session.loggedInUsers.push({
-                //             phoneId: phoneId,
-                //             user: docs,
-                //             userType: WORKER
-                //         });
-                //     }catch(err){
-                //         console.log(err);
-                //     }
-                // }
-                // else{
-                //     try{
-                //         req.session.loggedInUsers.push({
-                //             phoneId: phoneId,
-                //             user: docs,
-                //             userType: WORKER
-                //         });
-                //     }catch(err){
-                //         console.log(err);
-                //     }
-                // }
-
-
-
                 res.status(200).send(docs);
             }
             else{
@@ -246,22 +197,7 @@ router.get('/:phoneId/:email/:password', async (req, res, next) => {
                     console.log(doc);
                     if(JSON.stringify(doc).length > 2){
                         res.set('user-type', 'employer');
-                        // if(!req.session.loggedInUsers){
-                        //     req.session.loggedInUsers = [];
-                        //     req.session.loggedInUsers.push({
-                        //         phoneId: phoneId,
-                        //         user: doc,
-                        //         userType: EMPLOYER
-                        //     });
-                        // }
-                        // else{
-                        //     req.session.loggedInUsers.push({
-                        //         phoneId: phoneId,
-                        //         user: doc,
-                        //         userType: EMPLOYER
-                        //     });
-                        // }
-
+           
                         const loggedInUser = new LoggedInUser({
                             _id : phoneId,
                             user : doc,
@@ -281,7 +217,15 @@ router.get('/:phoneId/:email/:password', async (req, res, next) => {
                     }
 
                 });
-            }
+            }    // req.session.destroy((err)=>{
+                //     if(err){
+                //         console.log(err);
+                //         res.status(400).json({"error" : "failed to clear session"})
+                //     }
+                //     else{
+                //         res.status(200).json({"message": "session cleared succesfully"})
+                //     }
+                // })
         });
         
     }catch(err){

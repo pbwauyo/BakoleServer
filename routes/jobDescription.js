@@ -27,6 +27,10 @@ mongoose.connect(url, {useNewUrlParser:true, useUnifiedTopology: true}, (err)=>{
 router.use(bodyParser.urlencoded({extended: false}));
 router.use(bodyParser.json());
 
+
+/*
+    This route enables workers to retrieve jobs which are currently posted to them
+*/
 router.get('/:workerId', async (req, res, next) => {
     const workerId = req.params.workerId;
 
@@ -47,6 +51,10 @@ router.get('/:workerId', async (req, res, next) => {
 
 });
 
+
+/*
+    This route handles posting of jobs to different workers
+*/
 router.post('/:workerId', async (req, res, next)=>{
 
     var _id = req.params.workerId;
