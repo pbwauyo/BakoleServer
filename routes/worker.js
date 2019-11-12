@@ -16,6 +16,7 @@ router.use(bodyParser.urlencoded({extended: false}));
 
 router.get('/:location', async (req, res, next)=>{
     console.log("connection has been made at Workers");
+    //const formattedLocation = 
    
     try{
         await Worker.find({location: req.params.location}, 'firstName lastName sex category phoneNumber email averagePay location skillStatus rating').lean().exec((err, docs)=>{
@@ -34,6 +35,9 @@ router.get('/:location', async (req, res, next)=>{
     }
 });
 
+/*
+    Get worker details with the specified id param
+*/
 router.get('/ids/:workerId', async(req, res, next)=>{
     const id = req.params.workerId;
 

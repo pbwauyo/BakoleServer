@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 
 const jobDescription = mongoose.Schema({
-    _id: String,
+    _id: mongoose.Schema.Types.ObjectId,
+    jobId : String,
+    workerId : String,
     employerName: String,
     employerEmail: String,
     deviceToken: String,

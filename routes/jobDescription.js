@@ -35,7 +35,7 @@ router.get('/:workerId', async (req, res, next) => {
     const workerId = req.params.workerId;
 
     try{
-        await Job.find({_id : workerId}).lean().exec((err, doc)=>{
+        await Job.find({workerId : workerId}).lean().exec((err, doc)=>{
             if(err){
                 console.log(err);
             }
@@ -55,9 +55,11 @@ router.get('/:workerId', async (req, res, next) => {
 /*
     This route handles posting of jobs to different workers
 */
-router.post('/:workerId', async (req, res, next)=>{
+router.post('', async (req, res, next)=>{
 
-    var _id = req.params.workerId;
+    var _id = mongoose.Types.ObjectId();
+    var jobId = req.body.id;
+    var workerId = req.body.workerId;
     var employerName = req.body.employerName;
     var employerEmail = req.body.employerEmail;
     var employerDeviceToken = req.body.employerDeviceToken;
@@ -70,6 +72,8 @@ router.post('/:workerId', async (req, res, next)=>{
     
     const job = new Job ({
         _id: _id,
+        jobId : jobId,
+        workerId : workerId,
         employerName: employerName,
         employerEmail: employerEmail,
         employerDeviceToken: employerDeviceToken,
@@ -91,9 +95,9 @@ router.post('/:workerId', async (req, res, next)=>{
             in the db and get details about his email and deviceToken to be 
             used in sending a notification via firebase
         */
-        await Worker.find({_id: _id}).lean().exec(async (err, doc)=>{
+        await Worker.find({_id: workerId}).lean().exec(async (err, doc)=>{
             if(err){
-                console.log("error in sending notif to worker: ", _id);
+                console.log("error in sending notif to worker: ", err);
             }
             if(doc){
                 console.log("document: ", doc);
@@ -103,7 +107,7 @@ router.post('/:workerId', async (req, res, next)=>{
                     wDeviceId: doc[0]["deviceToken"]
                 }
         
-                await firebaseDb.collection("workers").doc(_id).set(worker);
+                await firebaseDb.collection("workers").doc(workerId).set(worker);
 
             }
         }) 

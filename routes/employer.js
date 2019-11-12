@@ -6,6 +6,7 @@ const router = express.Router();
 const url = require('../constants');
 const Employer = require('../models/employer');
 const EmployerJob = require('../models/employerJob');
+const Job = require('../models/jobDescription');
 
 mongoose.connect(url, {useNewUrlParser: true}, (err)=>{
     if(err){
@@ -20,9 +21,10 @@ router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({extended: false}));
 
 router.post('/jobs', async (req, res, next)=>{
-    const id = mongoose.Types.ObjectId();
+    const _id = mongoose.Types.ObjectId();
     const status = req.body.status;
     const job = {
+        jobId: req.body.job.id,
         employerName: req.body.job.employerName,
         employerEmail: req.body.job.employerEmail,
         description: req.body.job.description,
@@ -36,7 +38,7 @@ router.post('/jobs', async (req, res, next)=>{
     console.log(job);
 
     const employerJob = EmployerJob({
-        _id : id,
+        _id : _id,
         status : status,
         job : job
     });
@@ -52,6 +54,32 @@ router.post('/jobs', async (req, res, next)=>{
     }
 
 });
+
+router.get('/jobs/find/:jobId', async (req, res, next)=>{
+    const jobId = req.params.jobId;
+    console.log("jobId " ,jobId);
+
+    try {
+        await Job.find({jobId : jobId}).lean().exec((err, doc)=>{
+            if(err){
+                console.log("err has occured", err);
+                res.status(404).json({error : "error while finding job"});
+            }
+            else if(doc){
+                console.log(doc);
+                res.status(200).send(doc);
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({error : "error while finding job"});
+    }
+   
+});
+
+/*
+    Retrieve jobs which match the employer's email
+*/
 
 router.get('/jobs/:email', async (req, res, next)=>{
     const email = req.params.email;
