@@ -12,7 +12,8 @@ const jobDescription = mongoose.Schema({
     fee: String,
     place: String,
     time: String,
-    date: String
+    date: String,
+    status: String
 });
 
 module.exports = mongoose.model('JobDescription', jobDescription);

@@ -27,6 +27,52 @@ mongoose.connect(url, {useNewUrlParser:true, useUnifiedTopology: true}, (err)=>{
 router.use(bodyParser.urlencoded({extended: false}));
 router.use(bodyParser.json());
 
+/*
+    Route for declining jobs using _id field to look it up
+*/
+router.post('/decline/:id', async (req, res, next)=>{
+    const id = req.params.id;
+
+    try {
+        await Job.update({_id : id}, {$set : {status : "declined"}}, {multi: true},(err, raw)=>{
+            if(err){
+                console.log(err);
+                res.status(404).json({error : "error during declining job"});
+            }
+            else {
+                console.log("declination success");
+                res.status(200).json({message : "declination success"});
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({error : "error during declining"});
+    }
+});
+
+/*
+    Route for accepting jobs using _id field to look it up
+*/
+router.post('/accept/:id', async (req, res, next)=>{
+    const id = req.params.id;
+
+    try {
+        await Job.update({_id : id}, {$set : {status : "accepted"}}, {multi: true},(err, raw)=>{
+            if(err){
+                console.log(err);
+                res.status(404).json({error : "error during accepting job"});
+            }
+            else {
+                console.log("accept success");
+                res.status(200).json({message : "accept success"});
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({error : "error during accept"});
+    }
+});
+
 
 /*
     This route enables workers to retrieve jobs which are currently posted to them
@@ -58,7 +104,7 @@ router.get('/:workerId', async (req, res, next) => {
 router.post('', async (req, res, next)=>{
 
     var _id = mongoose.Types.ObjectId();
-    var jobId = req.body.id;
+    var jobId = req.body.jobId;
     var workerId = req.body.workerId;
     var employerName = req.body.employerName;
     var employerEmail = req.body.employerEmail;
@@ -82,7 +128,8 @@ router.post('', async (req, res, next)=>{
         fee: fee,
         place: place,
         time: time,
-        date: date, 
+        date: date,
+        status: "" 
     });
 
     console.log(job);

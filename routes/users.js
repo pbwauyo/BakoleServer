@@ -125,6 +125,7 @@ router.patch('/:deviceToken/:email/:userType', async (req, res, next)=>{
             });
         }catch(err){
             console.log(err);
+            res.status(404).json({error: "device token save unsuccessful"});
         }
     }
     else if(userType == EMPLOYER){

@@ -24,7 +24,7 @@ router.post('/jobs', async (req, res, next)=>{
     const _id = mongoose.Types.ObjectId();
     const status = req.body.status;
     const job = {
-        jobId: req.body.job.id,
+        jobId: req.body.job.jobId,
         employerName: req.body.job.employerName,
         employerEmail: req.body.job.employerEmail,
         description: req.body.job.description,
