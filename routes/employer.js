@@ -78,13 +78,43 @@ router.get('/jobs/find/:jobId', async (req, res, next)=>{
 });
 
 /*
-    Retrieve jobs which match the employer's email
+    Retrieve all jobs which match the employer's email
 */
 
 router.get('/jobs/:email', async (req, res, next)=>{
-    const email = req.params.email;
 
     try {
+        const email = req.params.email;
+        //first set the number of workers who have accepted the job
+        await EmployerJob.find({"job.employerEmail" : email}).lean().exec(async (err, results)=>{
+            if(err){
+                console.log(err);
+            }
+            else if(results){
+                for(result of results){
+                    const jobId = result["job"]["jobId"];
+                    console.log("jobId: ", jobId);
+     
+                    //first find the number of workers who have accepted to do the job
+                    await Job.find({jobId: jobId, status : "Accepted"}).lean().exec(async (err, docs)=>{
+                        if(err){
+                            console.log(err);
+                        }
+                        else if(docs){
+                            var size = docs.length;
+                            console.log("docs: ", docs, "length: ", size);
+                            await EmployerJob.update({"job.employerEmail" : email, "job.jobId" : jobId},{$set : {numOfWorkers : size.toString()}}, {multi: true}, (err, raw)=>{
+                                if(err){
+                                    console.log(err);
+                                }
+                            });
+                        }
+                    })
+                }
+            }
+    
+        });
+
         await EmployerJob.find({"job.employerEmail" : email}).lean().exec((err, doc)=>{
             if(err){
                 console.log(err);

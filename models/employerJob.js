@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const employerJob = new mongoose.Schema({
     _id : mongoose.Schema.Types.ObjectId,
     status : String,
+    numOfWorkers : String,
     job : {
         jobId: String,
         employerName: String,

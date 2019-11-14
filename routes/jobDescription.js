@@ -34,7 +34,7 @@ router.post('/decline/:id', async (req, res, next)=>{
     const id = req.params.id;
 
     try {
-        await Job.update({_id : id}, {$set : {status : "declined"}}, {multi: true},(err, raw)=>{
+        await Job.update({_id : id}, {$set : {status : "Declined"}}, {multi: true},(err, raw)=>{
             if(err){
                 console.log(err);
                 res.status(404).json({error : "error during declining job"});
@@ -57,7 +57,7 @@ router.post('/accept/:id', async (req, res, next)=>{
     const id = req.params.id;
 
     try {
-        await Job.update({_id : id}, {$set : {status : "accepted"}}, {multi: true},(err, raw)=>{
+        await Job.update({_id : id}, {$set : {status : "Accepted"}}, {multi: true},(err, raw)=>{
             if(err){
                 console.log(err);
                 res.status(404).json({error : "error during accepting job"});
