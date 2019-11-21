@@ -13,7 +13,8 @@ const jobDescription = mongoose.Schema({
     place: String,
     time: String,
     date: String,
-    status: String
+    status: String,
+    progress: String
 });
 
 module.exports = mongoose.model('JobDescription', jobDescription);

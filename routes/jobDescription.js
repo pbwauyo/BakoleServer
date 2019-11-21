@@ -28,6 +28,32 @@ router.use(bodyParser.urlencoded({extended: false}));
 router.use(bodyParser.json());
 
 /*
+    Route for retrieving specific job
+*/
+
+router.get('/retrieve/:id', async (req, res, next)=>{
+    console.log("retrieving jobs");
+    const id = req.params.id;
+
+    try {
+        await Job.find({_id : id}).lean().exec((err,docs)=>{
+            if(err){
+                console.log("ERROR: ", err);
+                res.status(404).json({error: "Job not found"});
+            }
+            else{
+                console.log("FOUND JOB: ", docs);
+                res.status(200).send(docs);
+            }
+        });
+    } catch (error) {
+        console.log("ERROR WHILE RETRIEVING JOB ", error);
+        res.status(500).json({error: "Internal error"});
+    }
+
+});
+
+/*
     Route for declining jobs using _id field to look it up
 */
 router.post('/decline/:id', async (req, res, next)=>{
@@ -73,6 +99,32 @@ router.post('/accept/:id', async (req, res, next)=>{
     }
 });
 
+/*
+    This route will handle setting of the job progress to Started
+*/
+
+router.patch('/progress/:id/:progress', async (req, res, next)=>{
+
+    const id = req.params.id;
+    const progress = req.params.progress;
+    console.log("Progress: ", progress);
+
+    try {
+        await Job.update({_id: id}, {$set: {progress: progress}}, {multi: true}, (err, raw)=>{
+            if(err){
+                print(err);
+                throw err;
+            }
+            else{
+                res.status(200).json({message: "update successful"});
+            }
+        }); 
+    } catch (error) {
+        res.status(404).json({error: "failed to update"});
+    }
+    
+});
+
 
 /*
     This route enables workers to retrieve jobs which are currently posted to them
@@ -84,6 +136,7 @@ router.get('/:workerId', async (req, res, next) => {
         await Job.find({workerId : workerId}).lean().exec((err, doc)=>{
             if(err){
                 console.log(err);
+                res.status(404).json({"ERROR": err});
             }
             if(doc){
                 console.log(doc);
@@ -93,6 +146,7 @@ router.get('/:workerId', async (req, res, next) => {
         
     }catch(err){
         console.log(err.message);
+        res.status(500).json({"INTERNAL ERROR": err});
     }
 
 });
@@ -129,7 +183,8 @@ router.post('', async (req, res, next)=>{
         place: place,
         time: time,
         date: date,
-        status: "" 
+        status: "",
+        progress: "Not Started" 
     });
 
     console.log(job);
