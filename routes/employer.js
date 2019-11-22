@@ -149,6 +149,30 @@ router.get('/jobs/:email', async (req, res, next)=>{
     }
 });
 
+router.get('/search/:email', async (req, res, next)=>{
+    const email = req.params.email;
+
+    try{
+        await Employer.find({email: email}).lean().exec((err, doc)=>{
+            if(err){
+                console.log(err);
+                res.status(500).json({"ERROR WHILE RETRIEVING" : err});
+            }
+            else if(JSON.stringify(doc).length > 0){
+                console.log(doc);
+                res.status(200).send(doc);
+            }
+            else{
+                console.log("NO SUCH EMPLOYER");
+                res.status(404).json({message: "no such Employer available"});
+            }
+        });
+    }catch(err){
+        console.log(err);
+        res.status(500).json({"INTERNAL ERROR": err});
+    }
+});
+
 router.get('/:email/:password', async(req, res, next)=>{
     const email = req.params.email;
     const password = req.params.password;

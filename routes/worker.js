@@ -36,6 +36,34 @@ router.get('/:location', async (req, res, next)=>{
 });
 
 /*
+    Get Worker
+*/
+
+router.get('/search/:email', async (req, res, next)=>{
+    const email = req.params.email;
+
+    try{
+        await Worker.find({email: email}).lean().exec((err, doc)=>{
+            if(err){
+                console.log(err);
+                res.status(500).json({"ERROR WHILE RETRIEVING" : err});
+            }
+            else if(JSON.stringify(doc).length > 0){
+                console.log(doc);
+                res.status(200).send(doc);
+            }
+            else{
+                console.log("NO SUCH WORKER");
+                res.status(404).json({message: "no such worker available"});
+            }
+        });
+    }catch(err){
+        console.log(err);
+        res.status(500).json({"INTERNAL ERROR" : err});
+    }
+});
+
+/*
     Get worker details with the specified id param
 */
 router.get('/ids/:workerId', async(req, res, next)=>{

@@ -21,6 +21,8 @@ requestListener.use('/jobs', jobPostsRoute);
 
 requestListener.use('/workers', workersRoute);
 
+requestListener.use('/reviews', reviewsRoute);
+
 requestListener.use((req, res, next)=>{
     const error = new Error("Not found")
     error.status = 404
@@ -35,8 +37,6 @@ requestListener.use((err, req, res, next)=>{
     })
 })
 
-
-requestListener.use(apiPrefix + '/reviews', reviewsRoute);
 
 module.exports = requestListener;
 
