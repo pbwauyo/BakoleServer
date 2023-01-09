@@ -14,7 +14,7 @@
     "dateformat": "^3.0.3",
     "express": "^4.17.1",
     "express-session": "^1.17.0",
-    "firebase-admin": "^8.6.1",
+    "firebase-admin": "^11.4.1",
     "memorystore": "^1.6.1",
     "mongoose": "^5.6.13"
   },
